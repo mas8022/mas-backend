@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Otp" ALTER COLUMN "expTime" SET DATA TYPE BIGINT;

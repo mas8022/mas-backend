@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id      Int       @id @default(autoincrement())
+  phone   String    @unique
+  role    String
+  score   Int?      @default(0)
+  Task    Task[]
+  contact Contact[]
+  Income  Income[]
+  Expense Expense[]
+}
+
+enum Priority {
+  کم
+  متوسط
+  زیاد
+}
+
+model Task {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String?
+  done        Boolean
+  priority    Priority
+  date        String
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+model Contact {
+  id           Int    @id @default(autoincrement())
+  userId       Int
+  contactPhone String
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, contactPhone])
+}
+
+model Message {
+  id       Int      @id @default(autoincrement())
+  sender   String
+  receiver String
+  content  String
+  createAt DateTime @default(now())
+}
+
+model Question {
+  id            Int     @id @default(autoincrement())
+  question      String
+  answerOne     String
+  answerTwo     String
+  answerThree   String
+  answerFour    String
+  category      String
+  correctAnswer String
+  publish       Boolean
+}
+
+model Income {
+  id       Int    @id @default(autoincrement())
+  amount   BigInt
+  category String
+  userId   Int
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Expense {
+  id       Int    @id @default(autoincrement())
+  amount   BigInt
+  category String
+  userId   Int
+
+  user User @relation(fields: [userId], references: [id])
+}
