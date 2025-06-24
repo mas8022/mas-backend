@@ -17,7 +17,7 @@ export class AuthService {
   ) {}
 
   async verifyOtp({ code, phone }: VerifyOtpCodeDto) {
-    const savedCode = await this.redisService.get(`otp:${phone}`);
+    const savedCode = await this.redisService.get(`mas:otp:${phone}`);
 
     if (!savedCode) {
       return { message: 'کد تأیید منقضی شده یا پیدا نشد', status: 403 };
@@ -27,7 +27,7 @@ export class AuthService {
       return { message: 'کد تأیید نامعتبر است', status: 401 };
     }
 
-    await this.redisService.del(`otp:${phone}`);
+    await this.redisService.del(`mas:otp:${phone}`);
 
     let user = await this.prismaService.user.findUnique({
       where: { phone },
@@ -58,7 +58,7 @@ export class AuthService {
     });
 
     await this.redisService.set(
-      `refresh_token:${sessionId}`,
+      `mas:refresh_token:${sessionId}`,
       refreshToken,
       7 * 24 * 60 * 60,
     );
@@ -87,7 +87,7 @@ export class AuthService {
       });
 
       if (response.status === 200) {
-        await this.redisService.set(`otp:${phone}`, code, ttl);
+        await this.redisService.set(`mas:otp:${phone}`, code, ttl);
         return { message: 'کد تأیید با موفقیت ارسال شد', status: 201 };
       }
 
@@ -117,7 +117,7 @@ export class AuthService {
       }
 
       const rawRefresh = await this.redisService.get(
-        `refresh_token:${session_id}`,
+        `mas:refresh_token:${session_id}`,
       );
 
       if (!rawRefresh) {
@@ -158,7 +158,7 @@ export class AuthService {
       return { status: 400, message: 'شناسه نشست پیدا نشد' };
     }
 
-    await this.redisService.del(`refresh_token:${session_id}`);
+    await this.redisService.del(`mas:refresh_token:${session_id}`);
 
     return { status: 200, message: 'با موفقیت خارج شدید' };
   }
