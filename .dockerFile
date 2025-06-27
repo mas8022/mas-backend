@@ -53,7 +53,7 @@ COPY --from=builder --chown=nestjs:nodejs /app/node_modules/.prisma ./node_modul
 USER nestjs
 
 # expose کردن port
-EXPOSE 3000
+EXPOSE 3005
 
 # تنظیم environment
 ENV NODE_ENV=production
