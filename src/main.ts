@@ -24,6 +24,8 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
-  await app.listen(process.env.port);
+  await app.listen(process.env.port, () => {
+    console.log(`server run on port ${process.env.port}`);
+  });
 }
 bootstrap();
