@@ -1,0 +1,5 @@
+{
+  "platform": "node",
+  "buildCommand": "npm run build",
+  "startCommand": "npx pm2-runtime start ecosystem.config.js"
+}
