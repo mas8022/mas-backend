@@ -19,12 +19,12 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: [process.env.FRONTEND_HOST_NAME, 'http://localhost:3006'],
+    origin: [process.env.FRONTEND_HOST_NAME],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
-  await app.listen(process.env.PORT,'0.0.0.0', () => {
+  await app.listen(process.env.PORT, '0.0.0.0', () => {
     console.log(`hey MAS server run on port ${process.env.PORT}`);
   });
 }
