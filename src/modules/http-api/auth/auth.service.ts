@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { PhoneDto } from './dto/phone.dto';
 import { Injectable } from '@nestjs/common';
 import { VerifyOtpCodeDto } from './dto/verify-otp-code.dto';
@@ -7,6 +6,7 @@ import { parse } from 'cookie';
 import { PrismaService } from 'src/modules/services/prisma/prisma.service';
 import { RedisService } from 'src/modules/services/redis/redis.service';
 import { JwtService } from 'src/modules/services/jwt/jwt.service';
+import * as request from 'request';
 
 @Injectable()
 export class AuthService {
@@ -75,8 +75,11 @@ export class AuthService {
     const code = Math.floor(10000 + Math.random() * 90000).toString();
     const ttl = 2 * 60;
 
-    try {
-      const response = await axios.post('http://ippanel.com/api/select', {
+    const options = {
+      url: 'https://ippanel.com/api/select',
+      method: 'POST',
+      json: true,
+      body: {
         op: 'pattern',
         user: process.env.FARAZSMS_USER,
         pass: process.env.FARAZSMS_PASS,
@@ -84,23 +87,38 @@ export class AuthService {
         toNum: phone,
         patternCode: process.env.FARAZSMS_PATTERN_CODE,
         inputData: [{ 'verification-code': code }],
-      });
+      },
+    };
 
-      if (response.status === 200) {
-        await this.redisService.set(`mas:otp:${phone}`, code, ttl);
-        return { message: 'کد تأیید با موفقیت ارسال شد', status: 201 };
-      }
+    const response = await new Promise<{ status: number; message: string }>(
+      (resolve) => {
+        request(options, async (error, res, body) => {
+          if (error) {
+            return resolve({
+              status: 500,
+              message: 'ارسال کد تأیید با خطا مواجه شد',
+            });
+          }
 
-      return {
-        message: 'سرویس پیامک در دسترس نیست',
-        status: 503,
-      };
-    } catch (error) {
-      return {
-        message: 'ارسال کد تأیید با خطا مواجه شد',
-        status: 500,
-      };
-    }
+          if (res.statusCode === 200) {
+            try {
+              await this.redisService.set(`mas:otp:${phone}`, code, ttl);
+              return resolve({
+                status: 200,
+                message: 'کد تأیید با موفقیت ارسال شد',
+              });
+            } catch (error) {
+              return resolve({
+                status: 500,
+                message: 'خطا در ذخیره کد تأیید',
+              });
+            }
+          }
+        });
+      },
+    );
+
+    return response;
   }
 
   async refreshToken(rawCookies: string) {
