@@ -30,6 +30,7 @@
     "@nestjs/websockets": "^11.1.2",
     "@prisma/client": "^6.10.1",
     "@types/request": "^2.48.12",
+    "axios": "^1.10.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "fastify": "^5.3.3",

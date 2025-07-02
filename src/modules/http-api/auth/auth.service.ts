@@ -6,7 +6,7 @@ import { parse } from 'cookie';
 import { PrismaService } from 'src/modules/services/prisma/prisma.service';
 import { RedisService } from 'src/modules/services/redis/redis.service';
 import { JwtService } from 'src/modules/services/jwt/jwt.service';
-import * as request from 'request';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +15,21 @@ export class AuthService {
     private readonly redisService: RedisService,
     private readonly jwtService: JwtService,
   ) {}
+
+  async sendOtp({ phone }: PhoneDto) {
+    try {
+      const response = await axios.post(
+        'https://console.melipayamak.com/api/send/otp/f30c82fbb3a14feea207f67db089ad43',
+        { to: phone },
+      );
+
+      await this.redisService.set(`mas:otp:${phone}`, response.data.code, 120);
+
+      return { status: 200, message: 'کد ارسال شد' };
+    } catch {
+      return { status: 500, message: 'خطا در ارسال کد' };
+    }
+  }
 
   async verifyOtp({ code, phone }: VerifyOtpCodeDto) {
     const savedCode = await this.redisService.get(`mas:otp:${phone}`);
@@ -69,56 +84,6 @@ export class AuthService {
       accessToken,
       sessionId,
     };
-  }
-
-  async sendOtp({ phone }: PhoneDto) {
-    const code = Math.floor(10000 + Math.random() * 90000).toString();
-    const ttl = 2 * 60;
-
-    const options = {
-      url: 'https://ippanel.com/api/select',
-      method: 'POST',
-      json: true,
-      body: {
-        op: 'pattern',
-        user: process.env.FARAZSMS_USER,
-        pass: process.env.FARAZSMS_PASS,
-        fromNum: process.env.FARAZSMS_FROM_NUM,
-        toNum: phone,
-        patternCode: process.env.FARAZSMS_PATTERN_CODE,
-        inputData: [{ 'verification-code': code }],
-      },
-    };
-
-    const response = await new Promise<{ status: number; message: string }>(
-      (resolve) => {
-        request(options, async (error, res, body) => {
-          if (error) {
-            return resolve({
-              status: 500,
-              message: 'ارسال کد تأیید با خطا مواجه شد',
-            });
-          }
-
-          if (res.statusCode === 200) {
-            try {
-              await this.redisService.set(`mas:otp:${phone}`, code, ttl);
-              return resolve({
-                status: 200,
-                message: 'کد تأیید با موفقیت ارسال شد',
-              });
-            } catch (error) {
-              return resolve({
-                status: 500,
-                message: 'خطا در ذخیره کد تأیید',
-              });
-            }
-          }
-        });
-      },
-    );
-
-    return response;
   }
 
   async refreshToken(rawCookies: string) {
