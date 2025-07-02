@@ -18,10 +18,7 @@ export class AuthService {
 
   async sendOtp({ phone }: PhoneDto) {
     try {
-      const response = await axios.post(
-        'https://console.melipayamak.com/api/send/otp/f30c82fbb3a14feea207f67db089ad43',
-        { to: phone },
-      );
+      const response = await axios.post(process.env.MELI_API, { to: phone });
 
       await this.redisService.set(`mas:otp:${phone}`, response.data.code, 120);
 
