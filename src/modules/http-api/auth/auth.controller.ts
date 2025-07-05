@@ -20,21 +20,12 @@ export class AuthController {
   async verifyOtp(@Body() body: VerifyOtpCodeDto, @Res() res: FastifyReply) {
     const { message, status, accessToken, sessionId } =
       await this.authService.verifyOtp(body);
-    res.setCookie('access_token', accessToken, {
-      maxAge: 60 * 15,
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
+    return res.send({
+      status,
+      message,
+      accessToken,
+      sessionId,
     });
-    res.setCookie('session_id', sessionId, {
-      maxAge: 60 * 60 * 24 * 7,
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
-    });
-    return res.send({ status, message });
   }
 
   @Post('send-otp')
@@ -53,15 +44,10 @@ export class AuthController {
         await this.authService.refreshToken(rawCookies);
 
       if (newAccessToken) {
-        res.setCookie('access_token', newAccessToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 60 * 15,
-          path: '/',
-        });
+        return res.send({ status, message, newAccessToken });
+      } else {
+        return res.send({ status, message, newAccessToken: null });
       }
-      return res.send({ status, message });
     } catch (error) {
       return {
         status: 500,
