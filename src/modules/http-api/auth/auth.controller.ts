@@ -5,12 +5,14 @@ import {
   Get,
   Headers,
   Post,
+  Req,
   Res,
 } from '@nestjs/common';
-import { FastifyReply } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { AuthService } from './auth.service';
 import { VerifyOtpCodeDto } from './dto/verify-otp-code.dto';
 import { PhoneDto } from './dto/phone.dto';
+import { parse } from 'cookie';
 
 @Controller('auth')
 export class AuthController {
@@ -35,13 +37,14 @@ export class AuthController {
   }
 
   @Get('refresh')
-  async refreshToken(
-    @Headers('cookie') rawCookies: string,
-    @Res() res: FastifyReply,
-  ) {
+  async refreshToken(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
     try {
+      const { access_token, session_id } = req.cookies;
+
+      console.log('MAS THIS COOKIE VALUE: ', { access_token, session_id });
+
       const { status, message, newAccessToken } =
-        await this.authService.refreshToken(rawCookies);
+        await this.authService.refreshToken(access_token, session_id);
 
       if (newAccessToken) {
         return res.send({ status, message, newAccessToken });
