@@ -10,19 +10,15 @@ const openai = new OpenAI({
 @Injectable()
 export class AiService {
   async reply(messages: AiMessagesDto[]) {
-    try {
-      const response = await openai.chat.completions.create({
-        model: 'openai/gpt-4o-mini',
-        messages,
-      });
+    const response = await openai.chat.completions.create({
+      model: 'openai/gpt-4o-mini',
+      messages,
+    });
 
-      return {
-        status: 200,
-        message: 'پاسخ داده شد',
-        data: response.choices[0].message.content,
-      };
-    } catch (error) {
-      console.log('mas error: ', error);
-    }
+    return {
+      status: 200,
+      message: 'پاسخ داده شد',
+      data: response.choices[0].message.content,
+    };
   }
 }

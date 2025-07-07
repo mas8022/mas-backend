@@ -41,8 +41,6 @@ export class AuthController {
     try {
       const { access_token, session_id } = req.cookies;
 
-      console.log('MAS THIS COOKIE VALUE: ', { access_token, session_id });
-
       const { status, message, newAccessToken } =
         await this.authService.refreshToken(access_token, session_id);
 
