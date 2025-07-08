@@ -12,22 +12,34 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { AuthService } from './auth.service';
 import { VerifyOtpCodeDto } from './dto/verify-otp-code.dto';
 import { PhoneDto } from './dto/phone.dto';
-import { parse } from 'cookie';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('verify-otp')
+  @Post('verify-otp')
   async verifyOtp(@Body() body: VerifyOtpCodeDto, @Res() res: FastifyReply) {
     const { message, status, accessToken, sessionId } =
       await this.authService.verifyOtp(body);
-    return res.send({
-      status,
-      message,
-      accessToken,
-      sessionId,
+
+    res.setCookie('access_token', accessToken, {
+      maxAge: 60 * 15,
+      httpOnly: true,
+      sameSite: 'none',
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
     });
+
+    res.setCookie('session_id', sessionId, {
+      maxAge: 60 * 60 * 24 * 7,
+      httpOnly: true,
+      sameSite: 'none',
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+    });
+
+    return res.send({ status, message });
   }
 
   @Post('send-otp')
@@ -39,16 +51,19 @@ export class AuthController {
   @Get('refresh')
   async refreshToken(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
     try {
-      const { access_token, session_id } = req.cookies;
-
       const { status, message, newAccessToken } =
-        await this.authService.refreshToken(access_token, session_id);
+        await this.authService.refreshToken(req.cookies);
 
       if (newAccessToken) {
-        return res.send({ status, message, newAccessToken });
-      } else {
-        return res.send({ status, message, newAccessToken: null });
+        res.setCookie('access_token', newAccessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'none',
+          maxAge: 60 * 15,
+          path: '/',
+        });
       }
+      return res.send({ status, message });
     } catch (error) {
       return {
         status: 500,

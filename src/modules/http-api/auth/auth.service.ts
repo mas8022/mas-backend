@@ -83,8 +83,9 @@ export class AuthService {
     };
   }
 
-  async refreshToken(access_token, session_id) {
+  async refreshToken(cookies) {
     try {
+      const { access_token, session_id } = cookies;
       try {
         this.jwtService.verifyAccessToken(access_token);
         return { status: 200, message: 'توکن معتبر است' };
