@@ -18,7 +18,6 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('verify-otp')
-  @Post('verify-otp')
   async verifyOtp(@Body() body: VerifyOtpCodeDto, @Res() res: FastifyReply) {
     const { message, status, accessToken, sessionId } =
       await this.authService.verifyOtp(body);

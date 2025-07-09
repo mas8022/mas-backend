@@ -20,6 +20,8 @@ export class AuthService {
     try {
       const response = await axios.post(process.env.MELI_API, { to: phone });
 
+      console.log("response.data: ", response.data);
+
       await this.redisService.set(`mas:otp:${phone}`, response.data.code, 120);
 
       return { status: 200, message: 'کد ارسال شد' };
