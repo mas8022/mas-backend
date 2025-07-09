@@ -40,7 +40,6 @@ export class FinancialController {
     @Headers('cookie') rawCookies: string,
   ) {
     const result = await this.financialService.getAnalytics(rawCookies);
-
     return res.send(result);
   }
 }

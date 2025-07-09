@@ -78,8 +78,19 @@ export class AuthController {
   ) {
     const { status, message } = await this.authService.logout(rawCookies);
 
-    res.clearCookie('access_token');
-    res.clearCookie('session_id');
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      path: '/',
+    });
+
+    res.clearCookie('session_id', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      path: '/',
+    });
 
     return res.send({ message, status });
   }

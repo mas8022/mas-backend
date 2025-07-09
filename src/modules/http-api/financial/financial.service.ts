@@ -41,22 +41,26 @@ export class FinancialService {
   async getAnalytics(rawCookies: string) {
     const me = await this.userService.getMe(rawCookies);
 
-    const totalIncomeData: any = await this.prismaService.income.aggregate({
+    // درآمد کلی
+    const totalIncomeData = await this.prismaService.income.aggregate({
       _sum: { amount: true },
     });
-    const totalIncome = Number(totalIncomeData._sum.amount);
+    const totalIncome = Number(totalIncomeData._sum.amount || 0);
 
-    const expensesIncomeData: any = await this.prismaService.expense.aggregate({
+    // مجموع هزینه‌ها
+    const expensesIncomeData = await this.prismaService.expense.aggregate({
       _sum: { amount: true },
     });
-    const expensesIncome = Number(expensesIncomeData._sum.amount);
+    const expensesIncome = Number(expensesIncomeData._sum.amount || 0);
 
-    const remaining = Number(Number(totalIncome) - Number(expensesIncome));
+    // مانده
+    const remaining = totalIncome - expensesIncome;
 
-    const costToIncomeRatio: any = Number(
-      Math.round((Number(expensesIncome) / Number(totalIncome)) * 100),
-    );
+    // نسبت هزینه به درآمد (درصد)
+    const costToIncomeRatio =
+      totalIncome > 0 ? Math.round((expensesIncome / totalIncome) * 100) : 0;
 
+    // ۳ دسته پرهزینه‌ترین کاربر
     const topThreeUserExpensesRaw = await this.prismaService.expense.groupBy({
       by: ['category'],
       where: {
@@ -76,10 +80,11 @@ export class FinancialService {
     const topThreeUserExpenses = topThreeUserExpensesRaw.map((item) => ({
       ...item,
       _sum: {
-        amount: Number(item._sum.amount),
+        amount: Number(item._sum.amount || 0),
       },
     }));
 
+    // ۳ دسته پردرآمدترین کاربر
     const topThreeUserIncomeRaw = await this.prismaService.income.groupBy({
       by: ['category'],
       where: {
@@ -99,7 +104,7 @@ export class FinancialService {
     const topThreeUserIncome = topThreeUserIncomeRaw.map((item) => ({
       ...item,
       _sum: {
-        amount: Number(item._sum.amount),
+        amount: Number(item._sum.amount || 0),
       },
     }));
 
